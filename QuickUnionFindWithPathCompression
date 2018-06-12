@@ -1,0 +1,114 @@
+//Hyunjae Lee
+/*QuickUWPC is different from QuickFIND because this class
+ * ensures that the smaller tree of values is always set to point towards the bigger
+ * tree when they are unioned together. This takes less runtime and is thus faster, 
+ * because the program does not have to spend so much time going through a very long tree
+ *and placing it under a smaller tree when it could be done faster in the reverse way.
+ */
+public class QuickUWPC implements IUnionFind {
+	private int[] parent;   // parent[i] = parent of i
+    private int[] size;     // size[i] = number of sites in subtree rooted at i
+    private int count;      // number of components
+    /**
+     * Initializes an empty union find data structure with {@code n} sites
+     * {@code 0} through {@code n-1}. Each site is initially in its own 
+     * component.
+     *
+     * @param  n the number of sites
+     * @throws IllegalArgumentException if {@code n < 0}
+     */
+    public QuickUWPC() {
+    	this(10);
+    }
+    /*Constructor that creates two empty integer arrays filled with
+    n entries that hold the value of their index.
+    */
+    public QuickUWPC(int n) {
+        initialize(n);
+    }
+    //
+    public void initialize(int n) {
+    	count = n;
+        parent = new int[n];
+        size = new int[n];
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+            size[i] = 1;
+        }
+    }
+    /**
+     * Returns the number of components.
+     *
+     * @return the number of components (between {@code 1} and {@code n})
+     */
+    //Returns number of components in the IUnionFind object.
+    public int components() {
+        return count;
+    }
+  
+    /**
+     * Returns the component identifier for the component containing site {@code p}.
+     *
+     * @param  p the integer representing one object
+     * @return the component identifier for the component containing site {@code p}
+     * @throws IllegalArgumentException unless {@code 0 <= p < n}
+     */
+    //Returns the "parent" value corresponding to the specified input p.
+    public int find(int p) {
+        validate(p);
+        int root = p;
+        while (root != parent[root])
+            root = parent[root];
+        while (p != root) {
+            int newp = parent[p];
+            parent[p] = root;
+            p = newp;
+        }
+        return root;
+    }
+    /**
+     * Returns true if the the two sites are in the same component.
+     *
+     * @param  p the integer representing one site
+     * @param  q the integer representing the other site
+     * @return {@code true} if the two sites {@code p} and {@code q} are in the same component;
+     *         {@code false} otherwise
+     * @throws IllegalArgumentException unless
+     *         both {@code 0 <= p < n} and {@code 0 <= q < n}
+     */
+    //Checks if the parents of the two values are the same, and thus in the same set.
+    public boolean connected(int p, int q) {
+        return find(p) == find(q);
+    }
+    private void validate(int p) {
+        int n = parent.length;
+        if (p < 0 || p >= n) {
+            throw new IllegalArgumentException("index " + p + " is not between 0 and " + (n-1));  
+        }
+    }  
+    /**
+     * Merges the component containing site {@code p} with the 
+     * the component containing site {@code q}.
+     *
+     * @param  p the integer representing one site
+     * @param  q the integer representing the other site
+     * @throws IllegalArgumentException unless
+     *         both {@code 0 <= p < n} and {@code 0 <= q < n}
+     */
+    //Places the two values in the same set, and making the smaller "tree" point towards the larger one rather than larger to smaller.
+    public void union(int p, int q) {
+        int rootP = find(p);
+        int rootQ = find(q);
+        if (rootP == rootQ) return;
+        // make smaller root point to larger one
+        if (size[rootP] < size[rootQ]) {
+            parent[rootP] = rootQ;
+            size[rootQ] += size[rootP];
+        }
+        else {
+            parent[rootQ] = rootP;
+            size[rootP] += size[rootQ];
+        }
+        count--;
+    }
+}
