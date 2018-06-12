@@ -1,0 +1,146 @@
+//Hyunjae Lee
+/**
+ * Simulate a system to see its Percolation Threshold, but use a UnionFind
+ * implementation to determine whether simulation occurs. The main idea is that
+ * initially all cells of a simulated grid are each part of their own set so
+ * that there will be n^2 sets in an nxn simulated grid. Finding an open cell
+ * will connect the cell being marked to its neighbors --- this means that the
+ * set in which the open cell is 'found' will be unioned with the sets of each
+ * neighboring cell. The union/find implementation supports the 'find' and
+ * 'union' typical of UF algorithms.
+ * <P>
+ * 
+ */
+public class PercolationUF implements IPercolate {
+	private final int OUT_BOUNDS = -1;
+	private final int VTOP;
+	private final int VBOTTOM;
+	private boolean[][] myGrid;
+	private IUnionFind myFinder;
+	private int myOpenCount;
+	/*Constructor that creates PercolationUF object and then creates a IUnionFind object
+	 * that will be used as an argument for the PercolationUF object to search for open cells.
+	 * Also creates VBOTTOM and VTOP "cells" that do not coincide in index with the actual grid.
+	 * These two extra "cells" are used to indicate a virtual top of the grid whereby if a cell is in
+	 * the same set as this top, it is full. If vtop is in the same set as vbottom, the system percolates.
+	 * Finally, iterates through the boolean grid myGrid and sets all the indeces to false.
+	 */
+	public PercolationUF(int size, IUnionFind finder) {
+		// TODO complete PercolationUF constructor
+		myGrid = new boolean[size][size];
+		int mySize = (int) Math.pow(size,  2) +2;
+		finder.initialize(mySize);
+		myFinder=finder;
+		myOpenCount=0;
+		VTOP=(size*size)+1;
+		VBOTTOM=(size*size);
+		for(int i=0; i<size; i++) {
+			for(int j=0; j<size; j++) {
+				myGrid[i][j]=false;
+			}
+		}
+		
+	}
+	/*Helper method for open method. When this helper method is called, it checks that the neighboring 
+	 * cells to the given cell are all inbounds of the grid and are open, and if they are, will change the 
+	 * given cell to open as well. Then, the IUnionFind object my Finder combines the given cell with the 
+	 * neighboring cells by putting them in the same set with the union method.
+	 */
+	private void updateOnOpen(int row, int col) {
+		if(inBounds(row + 1, col) && myGrid[row + 1][col]) {
+			myGrid[row][col] = true;
+			myFinder.union(getIndex(row,col),getIndex(row+1,col));			
+		}
+		if(inBounds(row, col+1) && myGrid[row][col+1]) {
+			myGrid[row][col] = true;
+			myFinder.union(getIndex(row,col),getIndex(row,col+1));
+		}
+		if(inBounds(row-1, col) && myGrid[row-1][col]) {
+			myGrid[row][col] = true;
+			myFinder.union(getIndex(row,col),getIndex(row-1,col));
+		}
+		if(inBounds(row, col-1) && myGrid[row][col-1]) {
+			myGrid[row][col] = true;
+			myFinder.union(getIndex(row,col),getIndex(row,col-1));
+		}
+	}
+	//Converts an integer row and integer column of a grid into a single integer index that goes down by column.
+	private int getIndex(int row, int col) {
+		// TODO complete getIndex
+		int result;
+		if(inBounds(row,col)) {
+			result = myGrid[0].length*row+col;
+			return result;
+		}
+		else
+			return OUT_BOUNDS;
+	}
+	/*Checks that the given cell is in the bounds of the grid, then makes sure the cell is not already open.
+	 * Then, increments myOpenCount by 1 each time the method is called and changes the cell in myGrid to "true"
+	 * which means it is open. If the given cell is in the top row, it unions it with VTOP to make it full and if the given
+	 * cell is in the bottom row, it unions it with VBOTTOM. Then, it updates the surrounding 4 cells to be open as well
+	 * by calling updateOnOpen.
+	 */
+	@Override
+	public void open(int i, int j) {
+		// TODO complete open
+		if(!inBounds(i,j))
+			throw new IndexOutOfBoundsException("wrong");
+		if (myGrid[i][j])
+			return;
+		myOpenCount += 1;
+		myGrid[i][j] = true;
+		if(inBounds(i, j) && i==0)
+			myFinder.union(VTOP,getIndex(i,j));
+		if(inBounds(i, j) && i==myGrid.length-1)
+			myFinder.union(VBOTTOM,getIndex(i,j));
+		updateOnOpen(i,j);
+	}
+	//Checks if a given cell is in bounds of grid, and if it is in open state, which is signified by true.
+	@Override
+	public boolean isOpen(int i, int j) {
+		// TODO complete isOpen
+		if(!inBounds(i,j)) {
+			throw new IndexOutOfBoundsException("wrong");
+		}
+		return myGrid[i][j]==true;
+	}
+	//Checks if given cell is in bounds of grid, and if it is in full state, which means it is in same set as VTOP.
+	@Override
+	public boolean isFull(int i, int j) {
+		// TODO complete isFull
+		if(!inBounds(i,j)) {
+			throw new IndexOutOfBoundsException("wrong");
+		}
+		return myFinder.connected(VTOP,getIndex(i,j));
+	}
+	//Gives the number of open cells there are.
+	@Override
+	public int numberOfOpenSites() {
+		// TODO return the number of calls to open new sites
+		return myOpenCount;
+	}
+	//Returns boolean value indicating whether VTOP is in same set as VBOTTOM (which means the system percolates).
+	@Override
+	public boolean percolates() {
+		// TODO complete percolates
+		return myFinder.connected(VTOP,VBOTTOM);
+	}
+	//Connects a given cell to its surrounding 4 cells, and checks to make sure the cell is in bounds of the grid.
+	private void connect(int row, int col) {
+		// TODO complete connect
+		if(!inBounds(row,col)) {
+			throw new IndexOutOfBoundsException("wrong");
+		}
+		myFinder.union(getIndex(row,col), getIndex(row+1,col));
+		myFinder.union(getIndex(row,col), getIndex(row,col+1));
+		myFinder.union(getIndex(row,col), getIndex(row-1, col));
+		myFinder.union(getIndex(row,col), getIndex(row, col-1));
+	}
+	//Checks that a given cell is within the bounds of the grid, by seeing if the row/column is negative or if they are greater than the dimensions of the grid.
+	private boolean inBounds(int row, int col) {
+		if (row < 0 || row >= myGrid.length) return false;
+		if (col < 0 || col >= myGrid[0].length) return false;
+		return true;
+	}
+}
