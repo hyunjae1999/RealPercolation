@@ -1,0 +1,67 @@
+//Hyunjae Lee
+public class PercolationDFSFast extends PercolationDFS {
+	public PercolationDFSFast(int n) {
+		super(n);
+	}
+	@Override
+	public boolean isOpen(int row, int col) {
+		if(!inBounds(row,col)) {
+			throw new IndexOutOfBoundsException("wrong");
+		}
+		return super.isOpen(row,  col);
+	}
+	@Override
+	public boolean isFull(int row, int col) {
+		if(!inBounds(row,col)) {
+			throw new IndexOutOfBoundsException("wrong");
+		}
+		return super.isFull(row, col);
+	}
+	@Override
+	public void open(int row, int col) {
+		if(!inBounds(row,col)) {
+			throw new IndexOutOfBoundsException("wrong");
+		}
+		super.open(row, col);
+	}
+	/*Rather than going through every single individual cell in the grid and checking if it is open or not, 
+	 * this method simply checks that the 4 neighboring cells of the specified cell are in bounds of the 
+	 * grid and that any one of the neighbors are also full. If any of its neighbors are full, this method sets the specified 
+	 * cell as full as well. Also, it employs the depth first search method on each neighboring cell to set them as Full.
+	 * 
+	 */
+	@Override
+	protected void updateOnOpen(int row, int col) {
+		if(inBounds(row + 1, col) && myGrid[row + 1][col] == FULL) {
+			myGrid[row][col] = FULL;
+			dfs(row - 1, col);
+			dfs(row, col - 1);
+			dfs(row, col + 1);
+			dfs(row + 1, col);			
+		}
+		if(inBounds(row, col+1) && myGrid[row][col+1] == FULL) {
+			myGrid[row][col] = FULL;
+			dfs(row - 1, col);
+			dfs(row, col - 1);
+			dfs(row, col + 1);
+			dfs(row + 1, col);
+		}
+		if(inBounds(row-1, col) && myGrid[row-1][col] == FULL) {
+			myGrid[row][col] = FULL;
+			dfs(row - 1, col);
+			dfs(row, col - 1);
+			dfs(row, col + 1);
+			dfs(row + 1, col);
+		}
+		if(inBounds(row, col-1) && myGrid[row][col-1] == FULL) {
+			myGrid[row][col] = FULL;
+			dfs(row - 1, col);
+			dfs(row, col - 1);
+			dfs(row, col + 1);
+			dfs(row + 1, col);
+		}
+		if(row==0)
+			dfs(row+1, col);
+	}
+	
+}
